@@ -1,8 +1,6 @@
 datasets
-layer_utils
 model
 nets
-nms
 ops
 roi_data_layer
 utils
