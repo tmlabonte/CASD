@@ -41,6 +41,14 @@ case ${DATASET} in
     ANCHORS="[4,8,16,32]"
     RATIOS="[0.5,1,2]"
     ;;
+  fsod)
+    TRAIN_IMDB="coco_fsod_200_train"
+    TEST_IMDB="coco_fsod_200_test"
+    STEPSIZE="[120000]"
+    ITERS=150000
+    ANCHORS="[4,8,16,32]"
+    RATIOS="[0.5,1,2]"
+    ;;
   *)
     echo "No dataset given"
     exit

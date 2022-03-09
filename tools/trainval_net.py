@@ -85,11 +85,11 @@ def combined_roidb(imdb_names):
 
 if __name__ == '__main__':
   import os
-  os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-  os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"  # specify which GPU(s) to be used
+  # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+  # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"  # specify which GPU(s) to be used
 
   args = parse_args()
-  args.set_cfgs = ['ANCHOR_SCALES', '[8,16,32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'TRAIN.STEPSIZE', '[50000]']
+  # args.set_cfgs = ['ANCHOR_SCALES', '[8,16,32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'TRAIN.STEPSIZE', '[50000]']
   print('Called with args:')
   print(args)
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
   #print('Using config:')
   #pprint.pprint(cfg)
-  args.max_iters = 100000
+  # args.max_iters = 100000
   np.random.seed(cfg.RNG_SEED)
   torch.manual_seed(cfg.RNG_SEED)
   torch.cuda.manual_seed_all(cfg.RNG_SEED)

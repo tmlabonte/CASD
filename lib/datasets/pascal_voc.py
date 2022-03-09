@@ -31,6 +31,7 @@ class pascal_voc(imdb):
     self._year = year
     self._image_set = image_set
     self._devkit_path = self._get_default_path()
+    self._devkit_path = "data/VOCdevkit"
     self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)
     self._classes = ('aeroplane', 'bicycle', 'bird', 'boat',
                      'bottle', 'bus', 'car', 'cat', 'chair',
@@ -169,15 +170,17 @@ class pascal_voc(imdb):
     return self.create_roidb_from_box_list(box_list, gt_roidb)
 
   def _load_selective_search_roidb(self, gt_roidb):
-    filename = os.path.abspath(os.path.join(cfg.DATA_DIR,
-                                            'selective_search_data',
-                                            self.name + '.mat'))
+    #filename = os.path.abspath(os.path.join(cfg.DATA_DIR,
+    #                                        'selective_search_data',
+    #                                        self.name + '.mat'))
+    filename = "data/selective_search_data/" + self.name + ".mat"
     assert os.path.exists(filename), \
         'Selective search data not found at: {}'.format(filename)
     raw_data = sio.loadmat(filename)['boxes'].ravel()
 
     box_list = []
     for i in range(raw_data.shape[0]):
+        print(raw_data[i][0])
         boxes = raw_data[i][:, (1, 0, 3, 2)] - 1
         keep = ds_utils.unique_boxes(boxes)
         boxes = boxes[keep, :]

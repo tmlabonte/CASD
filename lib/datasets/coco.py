@@ -25,15 +25,21 @@ from pycocotools.cocoeval import COCOeval
 from pycocotools import mask as COCOmask
 
 class coco(imdb):
-  def __init__(self, image_set, year):
-    imdb.__init__(self, 'coco_' + year + '_' + image_set)
+  def __init__(self, image_set, year=None):
+    if year:
+      imdb.__init__(self, 'coco_' + year + '_' + image_set)
+    else:
+      imdb.__init__(self, 'coco_fsod_200_' + image_set)
     # COCO specific config options
     self.config = {'use_salt': True,
                    'cleanup': True}
     # name, paths
     self._year = year
     self._image_set = image_set
-    self._data_path = osp.join(cfg.DATA_DIR, 'coco')
+    if year:
+      self._data_path = osp.join(cfg.DATA_DIR, 'coco')
+    else:
+      self._data_path = osp.join(cfg.DATA_DIR, 'fsod')
     # load COCO API, classes, class <-> id mappings
     self._COCO = COCO(self._get_ann_file())
     cats = self._COCO.loadCats(self._COCO.getCatIds())
@@ -43,7 +49,8 @@ class coco(imdb):
                                                self._COCO.getCatIds())))
     self._image_index = self._load_image_set_index()
     # Default to roidb handler
-    self.set_proposal_method('gt')
+    self.roidb_handler = self.selective_search.roidb
+    self.set_proposal_method('selective_search')
     self.competition_mode(False)
 
     # Some image sets are "views" (i.e. subsets) into others.
@@ -54,7 +61,10 @@ class coco(imdb):
       'valminusminival2014': 'val2014',  # val2014 \setminus minival2014
       'test-dev2015': 'test2015',
     }
-    coco_name = image_set + year  # e.g., "val2014"
+    if year:
+      coco_name = image_set + year  # e.g., "val2014"
+    else:
+      coco_name = image_set
     self._data_name = (self._view_map[coco_name]
                        if coco_name in self._view_map
                        else coco_name)
@@ -63,10 +73,13 @@ class coco(imdb):
     self._gt_splits = ('train', 'val', 'minival')
 
   def _get_ann_file(self):
+    """
     prefix = 'instances' if self._image_set.find('test') == -1 \
       else 'image_info'
     return osp.join(self._data_path, 'annotations',
                     prefix + '_' + self._image_set + self._year + '.json')
+    """
+    return osp.join(self._data_path, 'annotations/fsod_200_' + self._image_set + '.json')
 
   def _load_image_set_index(self):
     """
@@ -119,6 +132,56 @@ class coco(imdb):
       pickle.dump(gt_roidb, fid, pickle.HIGHEST_PROTOCOL)
     print('wrote gt roidb to {}'.format(cache_file))
     return gt_roidb
+
+  def _load_selective_search_roidb(self, gt_roidb):
+    filename = os.path.abspath(os.path.join(cfg.DATA_DIR,
+                                            'selective_search_data',
+                                            self.name + '.pkl'))
+    assert os.path.exists(filename), \
+        'Selective search data not found at: {}'.format(filename)
+
+    with open(filename, "rb") as f:
+        raw_data = pickle.load(f)
+
+    box_list = []
+    for j in raw_data["boxes"]:
+        print(j)
+        # What formatting?
+        boxes = j[(1, 0, 3, 2)] - 1
+        keep = ds_utils.unique_boxes(boxes)
+        boxes = boxes[keep, :]
+        keep = ds_utils.filter_small_boxes(boxes, self.config['min_size'])
+        boxes = boxes[keep, :]
+        box_list.append(boxes)
+
+    return self.create_roidb_from_box_list(box_list, gt_roidb)
+
+  def selective_search_roidb(self):
+    """
+    Return the database of selective search regions of interest.
+    Ground-truth ROIs are also included.
+
+    This function loads/saves from/to a cache file to speed up future calls.
+    """
+    cache_file = os.path.join(self.cache_path,
+                              self.name + '_selective_search_roidb.pkl')
+
+    if os.path.exists(cache_file):
+        with open(cache_file, 'rb') as fid:
+            roidb = pickle.load(fid)
+        print('{} ss roidb loaded from {}'.format(self.name, cache_file))
+
+        return roidb
+
+    gt_roidb = self.gt_roidb()
+    ss_roidb = self._load_selective_search_roidb(gt_roidb)
+    roidb = imdb.merge_roidbs(gt_roidb, ss_roidb)
+
+    with open(cache_file, 'wb') as fid:
+        pickle.dump(roidb, fid, pickle.HIGHEST_PROTOCOL)
+    print('wrote ss roidb to {}'.format(cache_file))
+
+    return roidb
 
   def _load_coco_annotation(self, index):
     """
