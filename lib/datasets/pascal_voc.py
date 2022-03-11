@@ -23,21 +23,25 @@ from model.config import cfg
 
 
 class pascal_voc(imdb):
-  def __init__(self, image_set, year, use_diff=False):
-    name = 'voc_' + year + '_' + image_set
+  def __init__(self, image_set, year, use_diff=False, seed=None):
+    #name = 'voc_' + year + '_' + image_set
+    name = "voc0_" + image_set
     if use_diff:
       name += '_diff'
     imdb.__init__(self, name)
     self._year = year
+    self.seed=seed
     self._image_set = image_set
-    self._devkit_path = self._get_default_path()
-    self._devkit_path = "data/VOCdevkit"
-    self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)
-    self._classes = ('aeroplane', 'bicycle', 'bird', 'boat',
-                     'bottle', 'bus', 'car', 'cat', 'chair',
-                     'cow', 'diningtable', 'dog', 'horse',
-                     'motorbike', 'person', 'pottedplant',
-                     'sheep', 'sofa', 'train', 'tvmonitor')
+    self._data_path = f"/mnt/cvgroupsouthcentral/fsod/annotations/voc{self.seed}"
+    #self._classes = ('aeroplane', 'bicycle', 'bird', 'boat',
+    #                 'bottle', 'bus', 'car', 'cat', 'chair',
+    #                 'cow', 'diningtable', 'dog', 'horse',
+    #                 'motorbike', 'person', 'pottedplant',
+    #                 'sheep', 'sofa', 'train', 'tvmonitor')
+    self._classes = []
+    with open("/mnt/cvgroupsouthcentral/fsod/novel_classes.txt", "r") as f:
+        for line in f:
+            self._classes.append(line.strip("\n"))
     self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
     self._image_ext = '.jpg'
     self._image_index = self._load_image_set_index()
@@ -55,8 +59,6 @@ class pascal_voc(imdb):
                    'rpn_file': None,
                    'min_size': 20}
 
-    assert os.path.exists(self._devkit_path), \
-      'VOCdevkit path does not exist: {}'.format(self._devkit_path)
     assert os.path.exists(self._data_path), \
       'Path does not exist: {}'.format(self._data_path)
 
@@ -89,12 +91,6 @@ class pascal_voc(imdb):
     with open(image_set_file) as f:
       image_index = [x.strip() for x in f.readlines()]
     return image_index
-
-  def _get_default_path(self):
-    """
-    Return the default path where PASCAL VOC is expected to be installed.
-    """
-    return os.path.join(cfg.DATA_DIR, 'VOCdevkit' + self._year)
 
   def gt_roidb(self):
     """
@@ -138,12 +134,12 @@ class pascal_voc(imdb):
 
         return roidb
 
-    if int(self._year) == 2007 or self._image_set != 'test':
-        gt_roidb = self.gt_roidb()
-        ss_roidb = self._load_selective_search_roidb(gt_roidb)
-        roidb = imdb.merge_roidbs(gt_roidb, ss_roidb)
-    else:
-        roidb = self._load_selective_search_roidb(None)
+    #if int(self._year) == 2007 or self._image_set != 'test':
+    gt_roidb = self.gt_roidb()
+    ss_roidb = self._load_selective_search_roidb(gt_roidb)
+    roidb = imdb.merge_roidbs(gt_roidb, ss_roidb)
+    #else:
+    #    roidb = self._load_selective_search_roidb(None)
     with open(cache_file, 'wb') as fid:
         pickle.dump(roidb, fid, pickle.HIGHEST_PROTOCOL)
     print('wrote ss roidb to {}'.format(cache_file))
@@ -151,12 +147,12 @@ class pascal_voc(imdb):
     return roidb
 
   def rpn_roidb(self):
-    if int(self._year) == 2007 or self._image_set != 'test':
-      gt_roidb = self.gt_roidb()
-      rpn_roidb = self._load_rpn_roidb(gt_roidb)
-      roidb = imdb.merge_roidbs(gt_roidb, rpn_roidb)
-    else:
-      roidb = self._load_rpn_roidb(None)
+    #if int(self._year) == 2007 or self._image_set != 'test':
+    gt_roidb = self.gt_roidb()
+    rpn_roidb = self._load_rpn_roidb(gt_roidb)
+    roidb = imdb.merge_roidbs(gt_roidb, rpn_roidb)
+    #else:
+    #  roidb = self._load_rpn_roidb(None)
 
     return roidb
 
@@ -173,15 +169,16 @@ class pascal_voc(imdb):
     #filename = os.path.abspath(os.path.join(cfg.DATA_DIR,
     #                                        'selective_search_data',
     #                                        self.name + '.mat'))
-    filename = "data/selective_search_data/" + self.name + ".mat"
-    assert os.path.exists(filename), \
-        'Selective search data not found at: {}'.format(filename)
-    raw_data = sio.loadmat(filename)['boxes'].ravel()
+    if "train" in self.name:
+        filename = f"/mnt/cvgroupsouthcentral/fsod/fsod_200_train{self.seed}_ss_boxes.pkl"
+    else:
+        filename = f"/mnt/cvgroupsouthcentral/fsod/fsod_200_test{self.seed}_ss_boxes.pkl"
+    with open(filename, "rb") as f:
+        raw_data = pickle.load(f)
 
     box_list = []
-    for i in range(raw_data.shape[0]):
-        print(raw_data[i][0])
-        boxes = raw_data[i][:, (1, 0, 3, 2)] - 1
+    for i in raw_data["boxes"]:
+        boxes = np.array([(x[0],x[1],x[0]+x[2],x[1]+x[3]) for x in i])
         keep = ds_utils.unique_boxes(boxes)
         boxes = boxes[keep, :]
         keep = ds_utils.filter_small_boxes(boxes, self.config['min_size'])

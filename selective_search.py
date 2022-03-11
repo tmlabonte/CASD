@@ -2,6 +2,11 @@ import cv2
 import json
 import numpy as np
 import pickle
+from configargparse import Parser
+
+parser = Parser()
+parser.add("--file")
+args = parser.parse_args()
 
 cv2.setUseOptimized(True)
 cv2.setNumThreads(4)
@@ -40,7 +45,7 @@ def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
     # return the resized image
     return resized, r
 
-images = json.load(open("/mnt/cvgroupsouthcentral/fsod/annotations/fsod_200_train2.json", "r"))["images"]
+images = json.load(open(f"/mnt/cvgroupsouthcentral/fsod/annotations/{args.file}.json", "r"))["images"]
 for j, image in enumerate(images):
     HEIGHT = 800
 
@@ -65,4 +70,4 @@ for j, image in enumerate(images):
         rects = rects * scale_fct
     result["boxes"].append(rects)
 
-pickle.dump(result, open("/mnt/cvgroupsouthcentral/fsod/fsod_200_train2_ss_boxes.pkl", "wb"))
+pickle.dump(result, open(f"/mnt/cvgroupsouthcentral/fsod/{args.file}_ss_boxes.pkl", "wb"))

@@ -36,9 +36,23 @@ case ${DATASET} in
     ANCHORS="[4,8,16,32]"
     RATIOS="[0.5,1,2]"
     ;;
-  fsod)
-    TRAIN_IMDB="coco_fsod_200_train"
-    TEST_IMDB="coco_fsod_200_test"
+  fsod0)
+    TRAIN_IMDB="fsod_200_train0"
+    TEST_IMDB="fsod_200_test0"
+    ITERS=150000
+    ANCHORS="[4,8,16,32]"
+    RATIOS="[0.5,1,2]"
+    ;;
+  fsod1)
+    TRAIN_IMDB="fsod_200_train1"
+    TEST_IMDB="fsod_200_test1"
+    ITERS=150000
+    ANCHORS="[4,8,16,32]"
+    RATIOS="[0.5,1,2]"
+    ;;
+  fsod2)
+    TRAIN_IMDB="fsod_200_train2"
+    TEST_IMDB="fsod_200_test2"
     ITERS=150000
     ANCHORS="[4,8,16,32]"
     RATIOS="[0.5,1,2]"

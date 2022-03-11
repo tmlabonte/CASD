@@ -41,15 +41,18 @@ for year in ['2015']:
     name = 'coco_{}_{}'.format(year, split)
     __sets[name] = (lambda split=split, year=year: coco(split, year=year))
 
-__sets['coco_fsod_200_train'] = (lambda: coco('train'))
-__sets['coco_fsod_200_test'] = (lambda: coco('test'))
+__sets['fsod_200_train0'] = (lambda: pascal_voc('trainval', '', seed=0))
+__sets['fsod_200_test0'] = (lambda: pascal_voc('test', '', seed=0))
+__sets['fsod_200_train1'] = (lambda: pascal_voc('trainval', '', seed=1))
+__sets['fsod_200_test1'] = (lambda: pascal_voc('test', '', seed=1))
+__sets['fsod_200_train2'] = (lambda: pascal_voc('trainval', '', seed=2))
+__sets['fsod_200_test2'] = (lambda: pascal_voc('test', '', seed=2))
 
 def get_imdb(name):
   """Get an imdb (image database) by name."""
   if name not in __sets:
     raise KeyError('Unknown dataset: {}'.format(name))
   return __sets[name]()
-
 
 def list_imdbs():
   """List all registered imdbs."""
