@@ -1,0 +1,23 @@
+description: CASD_TEST
+
+target:
+  service: amlk8s
+  name: itpscusv100cl
+  vc: resrchvc
+
+environment:
+  image: tmlabonte/casd:latest
+  
+code:
+  local_dir: $CONFIG_DIR/
+
+storage:
+  cvgroupsouthcentral:
+    storage_account_name: cvgroupsouthcentral
+    container_name: datasets
+
+jobs:
+- name: seed1_test
+  sku: G1
+  command:
+  - bash experiments/scripts/test_faster_rcnn.sh 0 fsod1 vgg16

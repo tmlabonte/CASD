@@ -1,0 +1,4 @@
+lib/build
+lib/ops
+lib/.eggs
+output

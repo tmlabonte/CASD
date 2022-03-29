@@ -57,7 +57,7 @@ case ${DATASET} in
     ANCHORS="[4,8,16,32]"
     RATIOS="[0.5,1,2]"
     ;;
-  fsod0)
+  fsod2)
     TRAIN_IMDB="fsod_200_train2"
     TEST_IMDB="fsod_200_test2"
     STEPSIZE="[120000]"

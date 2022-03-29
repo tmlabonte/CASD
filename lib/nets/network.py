@@ -321,7 +321,7 @@ class Network(nn.Module):
         det_cls_prob_product = torch.mul(cls_score, det_prob)
         det_cls_prob = torch.sum(det_cls_prob_product, 0)
         # bbox_pred = self.bbox_pred_net(fc7)
-        bbox_pred = torch.zeros(cls_prob.shape[0], 80)
+        bbox_pred = torch.zeros(cls_prob.shape[0], 800)
 
         self._predictions['refine_prob_1'] = refine_prob_1
         self._predictions['refine_prob_2'] = refine_prob_2
@@ -370,7 +370,7 @@ class Network(nn.Module):
             det_cls_prob_product2 = torch.mul(cls_prob, det_prob)
 
         # bbox_pred = self.bbox_pred_net(fc7)
-        bbox_pred = torch.zeros(cls_prob.shape[0], 80)
+        bbox_pred = torch.zeros(cls_prob.shape[0], 800)
         self._predictions["bbox_pred"] = bbox_pred
         self._predictions['det_cls_prob'] = det_cls_prob
         self._predictions['det_cls_prob_product'] = det_cls_prob_product2
@@ -542,7 +542,7 @@ class Network(nn.Module):
             self._gt_boxes = torch.from_numpy(gt_boxes).to(self._device) if gt_boxes is not None else None
             self.ss_boxes_indexes = self.return_ss_boxes(np.arange(ss_boxes.shape[0]), mode)
             rois, cls_prob, det_prob, bbox_pred, cls_det_prob_product, det_cls_prob = self._predict_test(ss_boxes[self.ss_boxes_indexes, :])
-            bbox_pred = bbox_pred[:, :80]
+            bbox_pred = bbox_pred[:, :800]
             stds = bbox_pred.data.new(cfg.TRAIN.BBOX_NORMALIZE_STDS).repeat(self._num_classes).unsqueeze(0).expand_as(bbox_pred)
             means = bbox_pred.data.new(cfg.TRAIN.BBOX_NORMALIZE_MEANS).repeat(self._num_classes).unsqueeze(0).expand_as(bbox_pred)
             self._predictions["bbox_pred"] = bbox_pred.mul(stds).add(means)
@@ -560,7 +560,7 @@ class Network(nn.Module):
             self._image_gt_summaries['ss_boxes_input'] = ss_boxes_all
 
             roi_labels_1, keep_inds_1, roi_labels_2, keep_inds_2, bbox_pred, rois = self._predict_train(ss_boxes_all, step)
-            bbox_pred = bbox_pred[:, :80]
+            bbox_pred = bbox_pred[:, :800]
             self._add_losses(roi_labels_1, keep_inds_1, roi_labels_2, keep_inds_2, step=step, rois=rois)
 
     def return_ss_boxes(self, boxes_index, mode='TRAIN'):

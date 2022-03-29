@@ -23,10 +23,10 @@ def parse_rec(filename):
     obj_struct['truncated'] = int(obj.find('truncated').text)
     obj_struct['difficult'] = int(obj.find('difficult').text)
     bbox = obj.find('bndbox')
-    obj_struct['bbox'] = [int(bbox.find('xmin').text),
-                          int(bbox.find('ymin').text),
-                          int(bbox.find('xmax').text),
-                          int(bbox.find('ymax').text)]
+    obj_struct['bbox'] = [int(float(bbox.find('xmin').text)),
+                          int(float(bbox.find('ymin').text)),
+                          int(float(bbox.find('xmax').text)),
+                          int(float(bbox.find('ymax').text))]
     objects.append(obj_struct)
 
   return objects
@@ -112,7 +112,7 @@ def voc_eval(detpath,
     # load annotations
     recs = {}
     for i, imagename in enumerate(imagenames):
-      recs[imagename] = parse_rec(annopath.format(imagename))
+      recs[imagename] = parse_rec(annopath + f"{imagename}.xml")
       if i % 100 == 0:
         print('Reading annotation for {:d}/{:d}'.format(
           i + 1, len(imagenames)))
@@ -145,7 +145,8 @@ def voc_eval(detpath,
                              'det': det}
 
   # read dets
-  detfile = detpath.format(classname)
+  #detfile = detpath.format(classname)
+  detfile=detpath
   with open(detfile, 'r') as f:
     lines = f.readlines()
 

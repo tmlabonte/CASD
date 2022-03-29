@@ -1,0 +1,36 @@
+description: CASD
+
+target:
+  service: amlk8s
+  name: itpseasiav100cl
+  vc: resrchvc
+
+environment:
+  image: tmlabonte/casd:latest
+  
+code:
+  local_dir: $CONFIG_DIR/
+
+storage:
+  cvgroupsouthcentral:
+    storage_account_name: cvgroupsouthcentral
+    container_name: datasets
+
+jobs:
+- name: seed0_casd
+  sku: G1
+  command:
+  - bash experiments/scripts/train_faster_rcnn.sh 0 fsod0 vgg16
+  - bash experiments/scripts/test_faster_rcnn.sh 0 fsod0 vgg16
+
+- name: seed1_casd
+  sku: G1
+  command:
+  - bash experiments/scripts/train_faster_rcnn.sh 0 fsod1 vgg16
+  - bash experiments/scripts/test_faster_rcnn.sh 0 fsod1 vgg16
+
+- name: seed2_casd
+  sku: G1
+  command:
+  - bash experiments/scripts/train_faster_rcnn.sh 0 fsod2 vgg16
+  - bash experiments/scripts/test_faster_rcnn.sh 0 fsod2 vgg16
